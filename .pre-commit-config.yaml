@@ -1,35 +1,6 @@
-default_language_version:
-  python: python3.7
-
-default_stages: [commit, push]
-
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.5.0
-    hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-
-  - repo: local
-    hooks:
-      - id: pyupgrade
-        name: pyupgrade
-        entry: poetry run pyupgrade --py37-plus
-        types: [python]
-        language: system
-
-  - repo: local
-    hooks:
-      - id: isort
-        name: isort
-        entry: poetry run isort --settings-path pyproject.toml
-        types: [python]
-        language: system
-
-  - repo: local
+  - repo: https://github.com/psf/black
+    rev: 19.10b0 # Replace by any tag/version: https://github.com/psf/black/tags
     hooks:
       - id: black
-        name: black
-        entry: poetry run black --config pyproject.toml
-        types: [python]
-        language: system
+        language_version: python3 # Should be a command that runs python3.6+
