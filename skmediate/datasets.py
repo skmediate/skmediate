@@ -18,7 +18,6 @@ def make_null_mediation(n_samples=600, n_mediators=1):
 
     Returns
     -------
-
     outcomes :
 
     exposures :
@@ -42,14 +41,16 @@ def make_null_mediation(n_samples=600, n_mediators=1):
     generator = check_random_state(random_state)
 
     # exposure-mediator simulation X->M
-    exposures, mediators, true_gam = make_regression(n_samples=n_samples,
-                                                     n_features=2,
-                                                     n_informative=1,
-                                                     n_targets=n_mediators,
-                                                     coef=True,
-                                                     shuffle=True,
-                                                     noise=1.0,
-                                                     random_state=generator)
+    exposures, mediators, true_gam = make_regression(
+        n_samples=n_samples,
+        n_features=2,
+        n_informative=1,
+        n_targets=n_mediators,
+        coef=True,
+        shuffle=True,
+        noise=1.0,
+        random_state=generator,
+    )
 
     if len(mediators.shape) == 1:
         mediators = mediators.reshape((mediators.shape[0], 1))
@@ -64,56 +65,62 @@ def make_null_mediation(n_samples=600, n_mediators=1):
     true_betas = np.zeros((n_mediators, n_outcomes))
     y_noise = 1.0
 
-    true_alpha[:n_informative_eo, :] = (25 + 75 *
-                                        generator.rand(n_informative_eo,
-                                                       n_outcomes))
+    true_alpha[:n_informative_eo, :] = 25 + 75 * generator.rand(
+        n_informative_eo, n_outcomes
+    )
 
-    outcomes = np.dot(exposures,true_alpha) + generator.normal(
-        scale=y_noise, size=(n_samples, n_outcomes))
+    outcomes = np.dot(exposures, true_alpha) + generator.normal(
+        scale=y_noise, size=(n_samples, n_outcomes)
+    )
 
     return outcomes, exposures, mediators, true_alpha, true_betas, true_gam
 
 
-# def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
-#     """
-#     Uses `make_regression` to simulate a naive multiple independent mediators problem.
-#     """
+def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
+    """
+    Uses `make_regression` to simulate a naive multiple independent mediators problem.
+    """
 
-#     random_state = 2
-#     generator = check_random_state(random_state)
+    random_state = 2
+    generator = check_random_state(random_state)
 
-#     # exposure-mediator simulation
-#     exposures, mediators, true_gam = make_regression(n_samples=n_samples,
-#                                                     n_features=2,
-#                                                     n_informative=1,
-#                                                     n_targets=n_mediators,
-#                                                     coef=True,
-#                                                     shuffle=True,
-#                                                     noise=1.0,
-#                                                     random_state=generator
-#                                                     )
-#     if len(mediators.shape)==1:
-#     mediators = mediators.reshape((mediators.shape[0],1))
-#     print(exposures.shape)
-#     print(mediators.shape)
+    # exposure-mediator simulation
+    exposures, mediators, true_gam = make_regression(
+        n_samples=n_samples,
+        n_features=2,
+        n_informative=1,
+        n_targets=n_mediators,
+        coef=True,
+        shuffle=True,
+        noise=1.0,
+        random_state=generator,
+    )
+    if len(mediators.shape) == 1:
+        mediators = mediators.reshape((mediators.shape[0], 1))
 
+    print(exposures.shape)
+    print(mediators.shape)
 
-#     # Y = alpha X + beta_1 M_1 + beta_2 M_2 + noise
+    # Y = alpha X + beta_1 M_1 + beta_2 M_2 + noise
 
-#     n_exposures = exposures.shape[1]
-#     n_mediators = mediators.shape[1]
-#     n_informative_eo = n_exposures # informative exposure-outcome coefficients
-#     n_outcomes = 1
+    n_exposures = exposures.shape[1]
+    n_mediators = mediators.shape[1]
+    n_informative_eo = n_exposures  # informative exposure-outcome coefficients
+    n_outcomes = 1
 
-#     true_alpha = np.zeros((n_exposures, n_outcomes))
-#     true_betas = np.zeros((n_mediators, n_outcomes))
+    true_alpha = np.zeros((n_exposures, n_outcomes))
+    true_betas = np.zeros((n_mediators, n_outcomes))
 
-#     true_alpha[:n_informative_eo, :] = 25 + 75 * generator.rand(n_informative_eo,
-#                                                             n_outcomes)
-#     true_betas = 25 + 75 * generator.rand(n_mediators, n_outcomes)
+    true_alpha[:n_informative_eo, :] = 25 + 75 * generator.rand(
+        n_informative_eo, n_outcomes
+    )
 
-#     outcomes = np.dot(exposures,true_alpha) +\
-#                 np.dot(mediators,true_betas) +\
-#                 generator.normal(scale=y_noise, size=(n_samples, n_outcomes))
+    true_betas = 25 + 75 * generator.rand(n_mediators, n_outcomes)
 
-#     return outcomes, exposures, mediators, true_alpha, true_betas, true_gam
+    outcomes = (
+        np.dot(exposures, true_alpha)
+        + np.dot(mediators, true_betas)
+        + generator.normal(scale=y_noise, size=(n_samples, n_outcomes))
+    )
+
+    return outcomes, exposures, mediators, true_alpha, true_betas, true_gam
