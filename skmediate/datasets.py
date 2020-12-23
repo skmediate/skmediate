@@ -78,7 +78,10 @@ def make_null_mediation(n_samples=600, n_mediators=1):
 
 def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
     """
-    Uses `make_regression` to simulate a naive multiple independent mediators problem.
+    Uses `make_regression` to simulate a naive multiple independent mediators
+    problem.
+
+
     """
 
     random_state = 2

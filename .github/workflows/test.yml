@@ -31,7 +31,7 @@ jobs:
       - name: Test
         run: |
           cp $(python -c 'import site; print(site.getsitepackages()[0])')/skmediate/_version.py skmediate/_version.py
-          pytest --pyargs skmediate --cov-report term-missing --cov-config .coveragerc --cov=skmediate -n auto
+          pytest --pyargs skmediate --cov-report term-missing --cov-config --doctest-modules .coveragerc --cov=skmediate -n auto
       # - name: Coveralls
       #   run: |
       #     coveralls
