@@ -3,7 +3,7 @@ from sklearn.datasets import make_regression
 from sklearn.utils import check_random_state
 
 
-def make_null_mediation(n_samples=600, n_mediators=1):
+def make_null_mediation(n_samples=600, n_mediators=1, random_state=0):
     """
     Uses `make_regression` to simulate a naive common cause problem where X->M, and X->Y
 
@@ -15,6 +15,8 @@ def make_null_mediation(n_samples=600, n_mediators=1):
     n_mediators : int, optional
         The number of mediators in the problem. Default: 1
 
+    random_state : int, optional
+        Sets the random seed for the random number generator
 
     Returns
     -------
@@ -37,7 +39,6 @@ def make_null_mediation(n_samples=600, n_mediators=1):
     >>> assert len(answer) == 6
 
     """
-    random_state = 2
     generator = check_random_state(random_state)
 
     # exposure-mediator simulation X->M
