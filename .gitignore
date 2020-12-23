@@ -5,7 +5,6 @@ skmediate/_version.py
 
 ### Project-Specific ###
 Makefile
-pyproject.toml
 SECURITY.md
 cookiecutter-config-file.yml
 
