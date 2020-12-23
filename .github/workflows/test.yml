@@ -19,9 +19,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install
         run: |
-          python -m pip install --upgrade pip --use-feature=2020-resolver
-          python -m pip install coveralls --use-feature=2020-resolver
-          python -m pip install .[dev] --use-feature=2020-resolver
+          python -m pip install --upgrade pip
+          python -m pip install coveralls
+          python -m pip install .[dev]
           python -m pip install https://github.com/bboe/coveralls-python/archive/github_actions.zip
       - name: Lint
         run: |
@@ -31,7 +31,7 @@ jobs:
       - name: Test
         run: |
           cp $(python -c 'import site; print(site.getsitepackages()[0])')/skmediate/_version.py skmediate/_version.py
-          pytest --pyargs skmediate --cov-report term-missing --cov-config .coveragerc --cov=skmediate -n auto
+          pytest --pyargs skmediate --cov-report term-missing --cov-config --doctest-modules .coveragerc --cov=skmediate -n auto
       # - name: Coveralls
       #   run: |
       #     coveralls
