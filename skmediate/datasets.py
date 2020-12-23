@@ -6,7 +6,8 @@ from sklearn.utils import check_random_state
 
 def make_null_mediation(n_samples=600, n_mediators=1, random_state=0):
     """
-    Uses `make_regression` to simulate a naive common cause problem where X->M, and X->Y
+    Uses `make_regression` to simulate a naive common cause problem
+    where X->M, and X->Y
 
     Parameters
     ----------
