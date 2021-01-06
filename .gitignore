@@ -4,7 +4,6 @@ skmediate/_version.py
 # Edit at https://www.gitignore.io/?templates=osx,python,pycharm,windows,visualstudio,visualstudiocode
 
 ### Project-Specific ###
-Makefile
 SECURITY.md
 cookiecutter-config-file.yml
 
