@@ -1,6 +1,4 @@
-"""
-Generate simulated and pseudoreal data.
-"""
+"""Generate simulated and pseudoreal data."""
 
 import numpy as np
 
@@ -141,9 +139,45 @@ def make_null_mediation(
 
 
 def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
-    """
-    Simulate data according to a mediation motif.
+    """Simulate data according to a mediation motif.
 
+    Parameters
+    ----------
+    n_samples : int, optional
+        The number of samples in the problem. Default: 600
+
+    n_mediators : int, optional
+        The number of mediators in the problem. Default: 1
+
+    y_noise : float,
+        The noise levels of y. Default: 1.5
+
+    random_state : int, optional
+        Sets the random seed for the random number generator
+
+    Returns
+    -------
+    outcomes : ndarray of shape (n_samples, n_outcomes)
+
+    exposures : ndarray of shape (n_samples, n_exposures)
+
+    mediators : ndarray of shape (n_samples, n_mediators)
+
+    true_alpha :
+        Coefficient(s) of X in the outcome model
+
+    true_beta :
+        Coefficient(s) of M in the outcome model
+
+    true_gam :
+        Coefficient(s) of X in the mediator model
+
+    Examples
+    --------
+    >>> from skmediate.datasets import make_mediation
+    >>> y, x, z, true_alpha, true_betas, true_gam = make_mediation()
+    >>> assert y.shape == (600, 1)
+    >>> assert x.shape == (600, 2)
     """
     random_state = 2
     generator = check_random_state(random_state)
@@ -161,9 +195,6 @@ def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
     )
     if len(mediators.shape) == 1:
         mediators = mediators.reshape((mediators.shape[0], 1))
-
-    print(exposures.shape)
-    print(mediators.shape)
 
     # Y = alpha X + beta_1 M_1 + beta_2 M_2 + noise
 
