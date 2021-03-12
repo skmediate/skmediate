@@ -8,7 +8,8 @@ def make_null_mediation(
     n_samples=600, n_mediators=50, random_state=0, dag_type="null-dag1"
 ):
     """
-    Uses `make_regression` to simulate null-dags for the mediation CPDAG.
+    Simulate null-dags for the mediation CPDAG. Invokes `make_regression`
+    from sklearn.
     Currently n_exposures and n_outcomes are fixed to be univariate.
     - 'null-dag1': confounding motif or common cause problem where X->Z,
     and X->Y
