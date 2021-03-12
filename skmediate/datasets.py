@@ -141,10 +141,7 @@ def make_null_mediation(
 
 
 def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
-    """
-    Simulate data according to a mediation motif.
-
-    """
+    """Simulate data according to a mediation motif."""
     random_state = 2
     generator = check_random_state(random_state)
 
