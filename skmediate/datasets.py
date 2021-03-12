@@ -196,9 +196,6 @@ def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
     if len(mediators.shape) == 1:
         mediators = mediators.reshape((mediators.shape[0], 1))
 
-    print(exposures.shape)
-    print(mediators.shape)
-
     # Y = alpha X + beta_1 M_1 + beta_2 M_2 + noise
 
     n_exposures = exposures.shape[1]
