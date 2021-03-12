@@ -1,6 +1,8 @@
 # type: ignore[attr-defined]
-"""A scikit-learn compatible package for performing mediational regression and
-causal mediation analysis"""
+"""A scikit-learn compatible package for intermediate regression and causal mediation analysis.
+
+Description: TBA
+"""
 
 try:
     from importlib.metadata import version, PackageNotFoundError
