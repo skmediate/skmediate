@@ -1,6 +1,4 @@
-"""
-Generate simulated and pseudoreal data.
-"""
+"""Generate simulated and pseudoreal data."""
 
 import numpy as np
 
@@ -180,7 +178,6 @@ def make_mediation(n_samples=600, n_mediators=1, y_noise=1.5):
     >>> y, x, z, true_alpha, true_betas, true_gam = make_mediation()
     >>> assert y.shape == (600, 1)
     >>> assert y.shape == (600, 2)
-
     """
     random_state = 2
     generator = check_random_state(random_state)
