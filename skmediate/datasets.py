@@ -7,7 +7,7 @@ from sklearn.utils import check_random_state
 
 
 def make_null_mediation(
-    n_samples=600, n_mediators=50, random_state=0, dag_type="null-dag1"
+    n_samples=600, n_mediators=50, random_state=0, dag_type="null-dag1", y_noise=1.0
 ):
     """
     Simulate null-dags for the mediation CPDAG.
@@ -32,6 +32,9 @@ def make_null_mediation(
 
     dag_type : string, optional
         Choose the type of null model to simulate
+
+    y_noise : float, optional
+        Set the random noise level added to outcomes. Default is 1.0
 
     Returns
     -------
@@ -70,7 +73,7 @@ def make_null_mediation(
             n_targets=n_mediators,
             coef=True,
             shuffle=True,
-            noise=1.0,
+            noise=0.25,
             random_state=generator,
         )
 
@@ -83,7 +86,7 @@ def make_null_mediation(
             n_targets=n_mediators,
             coef=True,
             shuffle=True,
-            noise=1.0,
+            noise=0.25,
             random_state=generator,
         )
 
@@ -97,11 +100,10 @@ def make_null_mediation(
 
     true_alpha = np.zeros((n_exposures, n_outcomes))
     true_beta = np.zeros((n_mediators, n_outcomes))
-    y_noise = 1.0
 
     if dag_type == "null-dag1":
 
-        true_alpha[:n_informative_eo, :] = 25 + 75 * generator.rand(
+        true_alpha[:n_informative_eo, :] = 75 + 25 * generator.rand(
             n_informative_eo, n_outcomes
         )
 
@@ -112,7 +114,7 @@ def make_null_mediation(
 
     elif dag_type == "null-dag2":
 
-        true_alpha[:n_informative_eo, :] = 25 + 75 * generator.rand(
+        true_alpha[:n_informative_eo, :] = 75 + 25 * generator.rand(
             n_informative_eo, n_outcomes
         )
 
@@ -126,7 +128,7 @@ def make_null_mediation(
         )
     else:
 
-        true_alpha[:n_informative_eo, :] = 25 + 75 * generator.rand(
+        true_alpha[:n_informative_eo, :] = 75 + 25 * generator.rand(
             n_informative_eo, n_outcomes
         )
 
