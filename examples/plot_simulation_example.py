@@ -8,7 +8,7 @@ simulate null and true data.
 """
 
 import numpy as np
-from datasets import make_null_mediation, make_mediation
+from skmediate.datasets import make_null_mediation, make_mediation
 
 outcomes, exposures, mediators, true_alpha, true_beta, true_gam = make_null_mediation(
     dag_type="null-dag1"
