@@ -2,6 +2,8 @@
 
 import numpy as np
 from scipy import linalg
+from sklearn.linear_model import LinearRegression
+from sklearn.covariance import EmpiricalCovariance
 
 
 class ConditionalCrossCovariance(object):
@@ -22,8 +24,18 @@ class ConditionalCrossCovariance(object):
 
         """
 
-        # Note: covariance_estimator should be initialized with assume_centered=True
-        pass
+        if regression_estimator is None:
+            regression_estimator = LinearRegression()
+
+        if covariance_estimator is None:
+            covariance_estimator = EmpiricalCovariance(assume_centered=True)
+
+        if precision_estimator is None:
+            precision_estimator = EmpiricalCovariance(assume_centered=True)
+
+        self.regression_estimator = regression_estimator
+        self.covariance_estimator = covariance_estimator
+        self.precision_estimator = precision_estimator
 
     def fit(self, X, Z, Y):
         """
@@ -60,14 +72,14 @@ class ConditionalCrossCovariance(object):
         rows_Y, cols_Y = self.residualized_Y_.shape
 
         self.cov_zz_ = self.covfit_zy_.covariance_[0 : cols_Z - 1, 0 : cols_Z - 1]
-        self.cov_zy_ = self.covfit_zy_.covariance_[0 : cols_Z - 1, cols_Z:]
+        self.cov_yz_ = self.covfit_zy_.covariance_[cols_Z:, 0 : cols_Z - 1]
         self.cov_yy_ = self.covfit_zy_.covariance_[cols_Z:, cols_Z:]
 
         # Estimate inverse of ZZ if dimensionality is small
         self.prec_zz_ = linalg.pinvh(self.cov_zz_, check_finite=False)
 
         self.residual_crosscovariance_ = np.matmul(
-            np.matmul(self.cov_zy_, self.prec_zz_), np.transpose(self.cov_zy_)
+            np.matmul(self.cov_yz_, self.prec_zz_), np.transpose(self.cov_yz_)
         )
 
         return self
