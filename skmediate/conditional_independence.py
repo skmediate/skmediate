@@ -35,6 +35,13 @@ class ConditionalCrossCovariance(object):
             Default: :class:`sklearn.covariance.EmpiricalCovariance`
 
 
+        Notes
+        -----
+        .. [1] Wim Van der Elst, Ariel Abad Alonso, Helena Geys, Paul Meyvisch,
+               Luc Bijnens, Rudradev Sengupta & Geert Molenberghs (2019)
+               Univariate Versus Multivariate Surrogates in the Single-Trial
+               Setting, Statistics in Biopharmaceutical Research, 11:3,
+               301-310, DOI: 10.1080/19466315.2019.1575276
         """
 
         if regression_estimator is None:
