@@ -1,4 +1,6 @@
-# scikit-learn class for cross-covariance statistic
+"""
+Classes for computations of conditional independence.
+"""
 
 import numpy as np
 from scipy import linalg
@@ -7,10 +9,7 @@ from sklearn.covariance import EmpiricalCovariance
 
 
 class ConditionalCrossCovariance(object):
-    """
-    Implements conditional dependence testing between multivariate quantities.
-
-    """
+    """Conditional dependence testing between multivariate quantities. """
 
     def __init__(
         self,
@@ -20,6 +19,20 @@ class ConditionalCrossCovariance(object):
     ):
         """
         Initializes ConditionalCrossCovariance with base estimators.
+
+        Parameters
+        ----------
+        regression_estimator : sklearn estimator class.
+            This class will be used to fit Y=f(X) and  X=f(X) and
+            to generate residuals for covariance estimation.
+            Default: :class:`sklearn.linear_model.LinearRegression`
+
+        covariance_estimator : sklearn covariance estimator class.
+            This class will be used to compute the covariance between
+            the residuals the f(X) and the Y, Z.
+
+        precision_estimator : sklearn covariance estimator class.
+            Default: :class:`sklearn.covariance.EmpiricalCovariance`
 
 
         """
@@ -39,8 +52,7 @@ class ConditionalCrossCovariance(object):
 
     def fit(self, X, Z, Y):
         """
-
-        Fits a conditional covariance matrix
+        Fits a conditional covariance matrix.
 
         Parameters
         ----------
@@ -75,7 +87,7 @@ class ConditionalCrossCovariance(object):
         self.cov_yz_ = self.covfit_zy_.covariance_[cols_Z:, 0 : cols_Z - 1]
         self.cov_yy_ = self.covfit_zy_.covariance_[cols_Z:, cols_Z:]
 
-        # Estimate inverse of ZZ if dimensionality is small
+        # Estimate inverse of ZZ if dimensionality is small:
         self.prec_zz_ = linalg.pinvh(self.cov_zz_, check_finite=False)
 
         self.residual_crosscovariance_ = np.matmul(
