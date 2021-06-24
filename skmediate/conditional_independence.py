@@ -1,7 +1,8 @@
 """
 Classes for computations of conditional independence.
 """
-
+import collections
+import inspect
 import numpy as np
 from scipy import linalg
 from sklearn.linear_model import LinearRegression
@@ -22,7 +23,7 @@ class ConditionalCrossCovariance(object):
 
         Parameters
         ----------
-        regression_estimator : sklearn estimator class.
+        regression_estimator : sklearn estimator class or sequence.
             This class will be used to fit Y=f(X) and  X=f(X) and
             to generate residuals for covariance estimation.
             Default: :class:`sklearn.linear_model.LinearRegression`
@@ -45,7 +46,16 @@ class ConditionalCrossCovariance(object):
         """
 
         if regression_estimator is None:
-            regression_estimator = LinearRegression()
+            self.regression_estimator_xz = (
+                self.regression_estimator_xy
+            ) = LinearRegression()
+        elif isinstance(regression_estimator, collections.Sequence):
+            self.regression_estimator_xz = regression_estimator[0]
+            self.regression_estimator_xy = regression_estimator[1]
+        else:
+            self.regression_estimator_xz = (
+                self.regression_estimator_xy
+            ) = regression_estimator
 
         if covariance_estimator is None:
             covariance_estimator = EmpiricalCovariance(assume_centered=True)
@@ -53,7 +63,6 @@ class ConditionalCrossCovariance(object):
         if precision_estimator is None:
             precision_estimator = EmpiricalCovariance(assume_centered=True)
 
-        self.regression_estimator = regression_estimator
         self.covariance_estimator = covariance_estimator
         self.precision_estimator = precision_estimator
 
@@ -76,8 +85,8 @@ class ConditionalCrossCovariance(object):
         # Step 1: Residualize with regression
 
         # TODO: Check regression type for supporting single or multi-output regression
-        regfit_xy = self.regression_estimator.fit(X, Y)
-        regfit_xz = self.regression_estimator.fit(X, Z)
+        regfit_xy = self.regression_estimator_xy.fit(X, Y)
+        regfit_xz = self.regression_estimator_xz.fit(X, Z)
 
         # Compute residualized Zs and Ys.
         self.residualized_Z_ = Z - regfit_xz.predict(X)
