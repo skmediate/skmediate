@@ -96,13 +96,13 @@ class ConditionalCrossCovariance(object):
         W = np.concatenate((self.residualized_Z_, self.residualized_Y_), axis=1)
         self.covfit_zy_ = self.covariance_estimator.fit(W)
 
-        rows_Z, cols_Z = self.residualized_Z_.shape
-        rows_Y, cols_Y = self.residualized_Y_.shape
+        cols_Z = self.residualized_Z_.shape[1]
 
         self.cov_zz_ = self.covfit_zy_.covariance_[0 : cols_Z - 1, 0 : cols_Z - 1]
         self.cov_yz_ = self.covfit_zy_.covariance_[cols_Z:, 0 : cols_Z - 1]
         self.cov_yy_ = self.covfit_zy_.covariance_[cols_Z:, cols_Z:]
 
+        # TODO : Use the precision estimator(s?) below:
         # Estimate inverse of ZZ if dimensionality is small:
         self.prec_zz_ = linalg.pinvh(self.cov_zz_, check_finite=False)
         self.prec_yy_ = linalg.pinvh(self.cov_yy_, check_finite=False)
