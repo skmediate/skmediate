@@ -105,9 +105,10 @@ class ConditionalCrossCovariance(object):
 
         # Estimate inverse of ZZ if dimensionality is small:
         self.prec_zz_ = linalg.pinvh(self.cov_zz_, check_finite=False)
+        self.prec_yy_ = linalg.pinvh(self.cov_yy_, check_finite=False)
 
-        self.residual_crosscovariance_ = np.matmul(
-            np.matmul(self.cov_yz_, self.prec_zz_), np.transpose(self.cov_yz_)
-        )
+        self.residual_crosscovariance_ = (
+            (self.cov_yz_ @ self.prec_zz_) @ self.cov_yz_.T
+        ) @ self.prec_yy_
 
         return self
