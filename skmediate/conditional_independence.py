@@ -2,7 +2,6 @@
 Classes for computations of conditional independence.
 """
 import collections
-import inspect
 import numpy as np
 from scipy import linalg
 from sklearn.linear_model import LinearRegression
