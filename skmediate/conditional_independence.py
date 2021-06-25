@@ -1,8 +1,5 @@
-"""
-Classes for computations of conditional independence.
-"""
+"""Classes for computations of conditional independence."""
 import collections
-import inspect
 import numpy as np
 from scipy import linalg
 from sklearn.linear_model import LinearRegression
@@ -10,7 +7,7 @@ from sklearn.covariance import EmpiricalCovariance
 
 
 class ConditionalCrossCovariance(object):
-    """Conditional dependence testing between multivariate quantities. """
+    """Conditional dependence testing between multivariate quantities."""
 
     def __init__(
         self,
@@ -19,7 +16,7 @@ class ConditionalCrossCovariance(object):
         precision_estimator=None,
     ):
         """
-        Initializes ConditionalCrossCovariance with base estimators.
+        Initialize ConditionalCrossCovariance with base estimators.
 
         Parameters
         ----------
@@ -44,7 +41,6 @@ class ConditionalCrossCovariance(object):
                Setting, Statistics in Biopharmaceutical Research, 11:3,
                301-310, DOI: 10.1080/19466315.2019.1575276
         """
-
         if regression_estimator is None:
             self.regression_estimator_xz = (
                 self.regression_estimator_xy
@@ -77,11 +73,11 @@ class ConditionalCrossCovariance(object):
             samples. That is, the shapes must be ``(n, r)``, ``(n, p)`` and ``(n, q)`` where
             `n` is the number of samples, `p` and `q` are the number of
             dimensions of ``Z`` and ``Y`` respectively.
+
         Returns
         -------
         self : object
         """
-
         # Step 1: Residualize with regression
 
         # TODO: Check regression type for supporting single or multi-output regression
