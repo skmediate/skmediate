@@ -2,8 +2,10 @@
 import collections
 import numpy as np
 from scipy import linalg
+from sklearn.base import clone, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.covariance import EmpiricalCovariance
+from inspect import getmro
 
 
 class ConditionalCrossCovariance(object):
@@ -25,13 +27,12 @@ class ConditionalCrossCovariance(object):
             to generate residuals for covariance estimation.
             Default: :class:`sklearn.linear_model.LinearRegression`
 
-        covariance_estimator : sklearn covariance estimator class.
+        covariance_estimator : sklearn covariance estimator class or sequence.
             This class will be used to compute the covariance between
-            the residuals the f(X) and the Y, Z.
+            the residuals of f(X) and the Y, Z.
 
         precision_estimator : sklearn covariance estimator class.
             Default: :class:`sklearn.covariance.EmpiricalCovariance`
-
 
         Notes
         -----
@@ -42,16 +43,29 @@ class ConditionalCrossCovariance(object):
                301-310, DOI: 10.1080/19466315.2019.1575276
         """
         if regression_estimator is None:
-            self.regression_estimator_xz = (
-                self.regression_estimator_xy
-            ) = LinearRegression()
+            self.regression_estimator_xz = LinearRegression()
+            self.regression_estimator_xy = LinearRegression()
         elif isinstance(regression_estimator, collections.Sequence):
+            if not all(isinstance(r, RegressorMixin) for r in regression_estimator):
+                mro = [getmro(type(r)) for r in regression_estimator]
+                raise ValueError(
+                    f"regression_estimator must contain estimator instances that "
+                    f"inherit from sklearn.base.RegressorMixin. Got "
+                    f"{regression_estimator} instead. These instances have the "
+                    f"following method resolution order:\n{mro}"
+                )
             self.regression_estimator_xz = regression_estimator[0]
             self.regression_estimator_xy = regression_estimator[1]
         else:
-            self.regression_estimator_xz = (
-                self.regression_estimator_xy
-            ) = regression_estimator
+            if not isinstance(regression_estimator, RegressorMixin):
+                raise ValueError(
+                    f"regression_estimator must inherit from "
+                    f"sklearn.base.RegressorMixin. Got {regression_estimator} "
+                    f"instead, which has the following method resolution "
+                    f"order:\n{getmro(type(regression_estimator))}"
+                )
+            self.regression_estimator_xz = clone(regression_estimator)
+            self.regression_estimator_xy = clone(regression_estimator)
 
         if covariance_estimator is None:
             covariance_estimator = EmpiricalCovariance(assume_centered=True)
@@ -81,28 +95,29 @@ class ConditionalCrossCovariance(object):
         # Step 1: Residualize with regression
 
         # TODO: Check regression type for supporting single or multi-output regression
-        regfit_xy = self.regression_estimator_xy.fit(X, Y)
         regfit_xz = self.regression_estimator_xz.fit(X, Z)
+        regfit_xy = self.regression_estimator_xy.fit(X, Y)
 
         # Compute residualized Zs and Ys.
         self.residualized_Z_ = Z - regfit_xz.predict(X)
         self.residualized_Y_ = Y - regfit_xy.predict(X)
 
         # Step 2: Covariance estimation
-        W = np.concatenate((self.residualized_Z_, self.residualized_Y_), axis=1)
+        # Step 2a: Estimate covariance of Y,Z
+        W = np.concatenate((self.residualized_Y_, self.residualized_Z_), axis=1)
         self.covfit_zy_ = self.covariance_estimator.fit(W)
+        cols_Y = self.residualized_Y_.shape[1]
+        self.cov_yz_ = self.covfit_zy_.covariance_[:cols_Y, cols_Y:]
 
-        cols_Z = self.residualized_Z_.shape[1]
+        # Step 2b: Estimate precision of Z
+        self.covfit_zz_ = self.precision_estimator.fit(self.residualized_Z_)
+        self.prec_zz_ = self.covfit_zz_.precision_
 
-        self.cov_zz_ = self.covfit_zy_.covariance_[0 : cols_Z - 1, 0 : cols_Z - 1]
-        self.cov_yz_ = self.covfit_zy_.covariance_[cols_Z:, 0 : cols_Z - 1]
-        self.cov_yy_ = self.covfit_zy_.covariance_[cols_Z:, cols_Z:]
+        # Step 2c: Estimate precision of Y
+        self.covfit_yy_ = self.precision_estimator.fit(self.residualized_Y_)
+        self.prec_yy_ = self.covfit_yy_.precision_
 
-        # TODO : Use the precision estimator(s?) below:
-        # Estimate inverse of ZZ if dimensionality is small:
-        self.prec_zz_ = linalg.pinvh(self.cov_zz_, check_finite=False)
-        self.prec_yy_ = linalg.pinvh(self.cov_yy_, check_finite=False)
-
+        # Step 2d: Calculate residual cross-covariance
         self.residual_crosscovariance_ = (
             (self.cov_yz_ @ self.prec_zz_) @ self.cov_yz_.T
         ) @ self.prec_yy_
