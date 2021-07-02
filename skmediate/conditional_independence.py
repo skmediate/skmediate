@@ -1,7 +1,7 @@
 """Classes for computations of conditional independence."""
 import collections
 import numpy as np
-from scipy import linalg
+
 from sklearn.base import clone, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.covariance import EmpiricalCovariance
