@@ -1,6 +1,7 @@
 """Classes for computations of conditional independence."""
 import collections
 import numpy as np
+import warnings
 
 from sklearn.base import clone, RegressorMixin
 from sklearn.linear_model import LinearRegression
@@ -35,6 +36,7 @@ class ConditionalCrossCovariance(object):
         regression_estimator=None,
         covariance_estimator=None,
         precision_estimator=None,
+        residualized=False,
     ):
         """
         Initialize ConditionalCrossCovariance with base estimators.
@@ -61,6 +63,11 @@ class ConditionalCrossCovariance(object):
             "min_cov_det", "oas", "shrunk"], to select one of the covariance
             classes from sklearn.covariance.
             Default: :class:`sklearn.covariance.EmpiricalCovariance`
+
+        residualized: bool
+            If True, assume that ``Y`` and ``Z`` have already been residualized
+            on ``X``.
+            Default: False
 
         Notes
         -----
@@ -125,17 +132,19 @@ class ConditionalCrossCovariance(object):
         else:
             self.precision_estimator = precision_estimator
 
-    def fit(self, X, Z, Y):
+        self.residualized = residualized
+
+    def fit(self, Z, Y, X=None):
         """
         Fits a conditional covariance matrix.
 
         Parameters
         ----------
-        X,Z,Y : ndarray
-            Input data matrices. ``X``, ``Z`` and ``Y`` must have the same number of
-            samples. That is, the shapes must be ``(n, r)``, ``(n, p)`` and ``(n, q)`` where
-            `n` is the number of samples, `p` and `q` are the number of
-            dimensions of ``Z`` and ``Y`` respectively.
+        Z, Y, X : ndarray
+            Input data matrices. ``Z``, ``Y``, and ``X`` must have the same
+            number of samples. That is, the shapes must be ``(n, p)``, ``(n, q)``,
+            and ``(n, r)``,  where `n` is the number of samples, `p` and
+            `q` are the number of dimensions of ``Z`` and ``Y`` respectively.
 
         Returns
         -------
@@ -144,19 +153,30 @@ class ConditionalCrossCovariance(object):
         # Step 1: Residualize with regression
 
         # TODO: Check regression type for supporting single or multi-output regression
-        regfit_xz = self.regression_estimator_xz.fit(X, Z)
-        regfit_xy = self.regression_estimator_xy.fit(X, Y)
+        if not self.residualized:
+            regfit_xz = self.regression_estimator_xz.fit(X, Z)
+            regfit_xy = self.regression_estimator_xy.fit(X, Y)
 
-        # Compute residualized Zs and Ys.
-        self.residualized_Z_ = Z - regfit_xz.predict(X)
-        self.residualized_Y_ = Y - regfit_xy.predict(X)
+            # Compute residualized Zs and Ys.
+            self.residualized_Z_ = Z - regfit_xz.predict(X)
+            self.residualized_Y_ = Y - regfit_xy.predict(X)
+        else:
+            self.residualized_Z_ = np.copy(Z)
+            self.residualized_Y_ = np.copy(Y)
+
+            if X is not None:
+                warnings.warn(
+                    "You supplied `X` to the fit method but specified "
+                    "`residualized=True` on init. This method will not use the "
+                    "`X` argument that you provided."
+                )
 
         # Step 2: Covariance estimation
         # Step 2a: Estimate covariance of Y,Z
         W = np.concatenate((self.residualized_Y_, self.residualized_Z_), axis=1)
         self.covfit_zy_ = self.covariance_estimator.fit(W)
         cols_Y = self.residualized_Y_.shape[1]
-        self.cov_yz_ = self.covfit_zy_.covariance_[:cols_Y, cols_Y:]
+        self.cov_zy_ = self.covfit_zy_.covariance_[:cols_Y, cols_Y:]
 
         # Step 2b: Estimate precision of Z
         self.covfit_zz_ = self.precision_estimator.fit(self.residualized_Z_)
@@ -167,8 +187,13 @@ class ConditionalCrossCovariance(object):
         self.prec_yy_ = self.covfit_yy_.precision_
 
         # Step 2d: Calculate residual cross-covariance
-        self.residual_crosscovariance_ = (
-            (self.cov_yz_ @ self.prec_zz_) @ self.cov_yz_.T
-        ) @ self.prec_yy_
+        self.residual_crosscovariance_ = np.diag(
+            ((self.cov_zy_ @ self.prec_zz_) @ self.cov_zy_.T) @ self.prec_yy_
+        ).flatten()
+
+        n, k = Z.shape
+        self.residual_crosscovariance_corrected_ = 1 - (
+            1 - self.residual_crosscovariance_
+        ) * ((n - 1) / (n - k - 1))
 
         return self
