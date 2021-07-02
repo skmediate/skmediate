@@ -4,8 +4,27 @@ import numpy as np
 
 from sklearn.base import clone, RegressorMixin
 from sklearn.linear_model import LinearRegression
-from sklearn.covariance import EmpiricalCovariance
+from sklearn.covariance import (
+    EmpiricalCovariance,
+    GraphicalLasso,
+    GraphicalLassoCV,
+    LedoitWolf,
+    MinCovDet,
+    OAS,
+    ShrunkCovariance,
+)
 from inspect import getmro
+
+
+COV_ESTIMATORS = {
+    "empirical": EmpiricalCovariance(),
+    "graphical_lasso": GraphicalLasso(),
+    "graphical_lasso_cv": GraphicalLassoCV(),
+    "ledoit_wolf": LedoitWolf(),
+    "min_cov_det": MinCovDet(),
+    "oas": OAS(),
+    "shrunk": ShrunkCovariance(),
+}
 
 
 class ConditionalCrossCovariance(object):
@@ -23,15 +42,24 @@ class ConditionalCrossCovariance(object):
         Parameters
         ----------
         regression_estimator : sklearn estimator class or sequence.
-            This class will be used to fit Y=f(X) and  X=f(X) and
-            to generate residuals for covariance estimation.
+            This class will be used to fit Y=f(X) and  X=f(X) and to generate
+            residuals for covariance estimation.
             Default: :class:`sklearn.linear_model.LinearRegression`
 
-        covariance_estimator : sklearn covariance estimator class or sequence.
-            This class will be used to compute the covariance between
-            the residuals of f(X) and the Y, Z.
+        covariance_estimator : sklearn covariance estimator class.
+            This class will be used to compute the covariance between the
+            residuals of f(X) and the Y, Z. This may also be a string, one of
+            ["empirical", "graphical_lasso", "graphical_lasso_cv",
+            "ledoit_wolf", "min_cov_det", "oas", "shrunk"], to select one of the
+            covariance classes from sklearn.covariance.
+            Default: :class:`sklearn.covariance.EmpiricalCovariance`
 
         precision_estimator : sklearn covariance estimator class.
+            This class will be used to compute the precision of the residualized
+            Y and Z. This may also be a string, one of ["empirical",
+            "graphical_lasso", "graphical_lasso_cv", "ledoit_wolf",
+            "min_cov_det", "oas", "shrunk"], to select one of the covariance
+            classes from sklearn.covariance.
             Default: :class:`sklearn.covariance.EmpiricalCovariance`
 
         Notes
@@ -73,8 +101,29 @@ class ConditionalCrossCovariance(object):
         if precision_estimator is None:
             precision_estimator = EmpiricalCovariance(assume_centered=True)
 
-        self.covariance_estimator = covariance_estimator
-        self.precision_estimator = precision_estimator
+        if isinstance(covariance_estimator, str):
+            if covariance_estimator not in COV_ESTIMATORS.keys():
+                raise ValueError(
+                    f"If covariance_estimator is a string, it must be one of "
+                    f"{COV_ESTIMATORS.keys()}. Got {covariance_estimator} "
+                    f"instead."
+                )
+
+            self.covariance_estimator = clone(COV_ESTIMATORS[covariance_estimator])
+        else:
+            self.covariance_estimator = covariance_estimator
+
+        if isinstance(precision_estimator, str):
+            if precision_estimator not in COV_ESTIMATORS.keys():
+                raise ValueError(
+                    f"If precision_estimator is a string, it must be one of "
+                    f"{COV_ESTIMATORS.keys()}. Got {precision_estimator} "
+                    f"instead."
+                )
+
+            self.precision_estimator = clone(COV_ESTIMATORS[precision_estimator])
+        else:
+            self.precision_estimator = precision_estimator
 
     def fit(self, X, Z, Y):
         """
