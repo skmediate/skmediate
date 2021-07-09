@@ -14,6 +14,8 @@ from sklearn.covariance import (
     OAS,
     ShrunkCovariance,
 )
+from sklearn.utils import shuffle
+from tqdm.auto import trange
 from inspect import getmro
 
 
@@ -37,6 +39,9 @@ class ConditionalCrossCovariance(object):
         covariance_estimator=None,
         precision_estimator=None,
         residualized=False,
+        estimate_p_value=False,
+        n_shuffle=1000,
+        show_progress=True,
     ):
         """
         Initialize ConditionalCrossCovariance with base estimators.
@@ -68,6 +73,19 @@ class ConditionalCrossCovariance(object):
             If True, assume that ``Y`` and ``Z`` have already been residualized
             on ``X``.
             Default: False
+
+        estimate_p_value: bool
+            If True, perform repeated permutation tests on ``Y`` to estimate the
+            p-value for the residual_cross_covariance_ score.
+            Default: False
+
+        n_shuffle: int
+            The number of permutation tests to perform to estimate the p-value.
+            Default: 1000
+
+        show_progress: bool
+            If True, show a progress bar while estimating the p-value
+            Default: True
 
         Notes
         -----
@@ -133,8 +151,11 @@ class ConditionalCrossCovariance(object):
             self.precision_estimator = precision_estimator
 
         self.residualized = residualized
+        self.estimate_p_value = estimate_p_value
+        self.n_shuffle = n_shuffle
+        self.show_progress = show_progress
 
-    def fit(self, Z, Y, X=None):
+    def fit(self, Z, Y, X=None, estimate_p_value=False):
         """
         Fits a conditional covariance matrix.
 
@@ -192,8 +213,41 @@ class ConditionalCrossCovariance(object):
         ).flatten()
 
         n, k = Z.shape
-        self.residual_crosscovariance_corrected_ = 1 - (
+        self.residual_crosscovariance_wherry_corrected_ = 1 - (
             1 - self.residual_crosscovariance_
         ) * ((n - 1) / (n - k - 1))
+
+        if self.estimate_p_value:
+            rcc_shuffle = []
+
+            shuffle_cov_est = clone(self.covariance_estimator)
+            shuffle_prec_est = clone(self.precision_estimator)
+
+            if self.show_progress:
+                shuffle_range = trange(self.n_shuffle)
+            else:
+                shuffle_range = range(self.n_shuffle)
+
+            for n in shuffle_range:
+                shuffle_Y = shuffle(Y)
+
+                shuffle_W = np.concatenate((shuffle_Y, self.residualized_Z_), axis=1)
+                shuffle_covfit_zy_ = shuffle_cov_est.fit(shuffle_W)
+                shuffle_cov_zy_ = shuffle_covfit_zy_.covariance_[:cols_Y, cols_Y:]
+
+                shuffle_prec_yy_ = shuffle_prec_est.fit(shuffle_Y).precision_
+
+                rcc_shuffle.append(
+                    np.diag(
+                        ((shuffle_cov_zy_ @ self.prec_zz_) @ shuffle_cov_zy_.T)
+                        @ shuffle_prec_yy_
+                    ).flatten()
+                )
+
+            self.rcc_p_value_ = (
+                1
+                - np.count_nonzero(self.residual_crosscovariance_ > rcc_shuffle, axis=0)
+                / self.n_shuffle
+            )
 
         return self
