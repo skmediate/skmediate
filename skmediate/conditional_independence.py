@@ -243,6 +243,8 @@ class ConditionalCrossCovariance(object):
                         @ shuffle_prec_yy_
                     ).flatten()
                 )
+            
+            self.null_distribution_ = rcc_shuffle
 
             self.rcc_p_value_ = (
                 np.sum(rcc_shuffle >= self.residual_crosscovariance_, axis=0)
