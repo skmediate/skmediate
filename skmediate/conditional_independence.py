@@ -245,8 +245,7 @@ class ConditionalCrossCovariance(object):
                 )
 
             self.rcc_p_value_ = (
-                1
-                - np.count_nonzero(self.residual_crosscovariance_ > rcc_shuffle, axis=0)
+                np.sum(rcc_shuffle > self.residual_crosscovariance_, axis=0)
                 / self.n_shuffle
             )
 
