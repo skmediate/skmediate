@@ -87,6 +87,37 @@ class ConditionalCrossCovariance(object):
             If True, show a progress bar while estimating the p-value
             Default: True
 
+        Attributes
+        ----------
+        regression_estimator_{xz, xy} : sklearn estimator class
+            The fitted regression estimators
+
+        residualized_{Y,Z}_ : numpy.ndarray
+            The residualized ``X``, ``Y``, and ``Z`` matrices
+
+        covfit_{yy,zy,zz}_ : sklearn covariance estimator class
+            The fitted covariance estimator for Y, Z, and YZ.
+
+        cov_zy_ : numpy.ndarray
+            The cross-covariance matrix for Y and Z
+
+        prec_{yy,zz}_ : numpy.ndarray
+            The precision matrix for Y and Z, respectively
+
+        residual_crosscovariance_ : float
+            The residualized cross-covariance
+
+        residual_crosscovariance_wherry_corrected_ : float
+            The residualized cross-covariance with bias corrected using the
+            Wherry formula. This may or may not be appropriate depending on the
+            type of covariance and precision estimators.
+
+        null_distribution_ : numpy.ndarray
+            Array of simulated null distribution values
+
+        rcc_p_value_ : float
+            Estimated p value for the ``residual_crosscovariance_`` point estimate
+
         Notes
         -----
         .. [1] Wim Van der Elst, Ariel Abad Alonso, Helena Geys, Paul Meyvisch,
@@ -243,8 +274,8 @@ class ConditionalCrossCovariance(object):
                         @ shuffle_prec_yy_
                     ).flatten()
                 )
-            
-            self.null_distribution_ = rcc_shuffle
+
+            self.null_distribution_ = np.array(rcc_shuffle)
 
             self.rcc_p_value_ = (
                 np.sum(rcc_shuffle >= self.residual_crosscovariance_, axis=0)
