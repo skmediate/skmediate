@@ -35,7 +35,7 @@ def test_conditional_independence():
         covariance_estimator="ledoit_wolf",
         precision_estimator="min_cov_det",
         estimate_p_value=True,
-        show_progress=False
+        show_progress=False,
     )
     xcov_estimator.fit(Z, Y, X)
 
@@ -43,7 +43,7 @@ def test_conditional_independence():
         covariance_estimator="ledoit_wolf",
         precision_estimator="min_cov_det",
         estimate_p_value=True,
-        show_progress=True
+        show_progress=True,
     )
     xcov_estimator.fit(Z, Y, X)
 
