@@ -1,8 +1,9 @@
 """Classes for computations of conditional independence."""
-import collections
 import numpy as np
 import warnings
 
+from collections.abc import Sequence
+from inspect import getmro
 from sklearn.base import clone, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.covariance import (
@@ -16,7 +17,6 @@ from sklearn.covariance import (
 )
 from sklearn.utils import shuffle
 from tqdm.auto import trange
-from inspect import getmro
 
 
 COV_ESTIMATORS = {
@@ -129,7 +129,7 @@ class ConditionalCrossCovariance(object):
         if regression_estimator is None:
             self.regression_estimator_xz = LinearRegression()
             self.regression_estimator_xy = LinearRegression()
-        elif isinstance(regression_estimator, collections.Sequence):
+        elif isinstance(regression_estimator, Sequence):
             if not all(isinstance(r, RegressorMixin) for r in regression_estimator):
                 mro = [getmro(type(r)) for r in regression_estimator]
                 raise ValueError(
