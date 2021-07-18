@@ -260,7 +260,7 @@ class ConditionalCrossCovariance(object):
                 shuffle_range = range(self.n_shuffle)
 
             for n in shuffle_range:
-                shuffle_Y = shuffle(Y)
+                shuffle_Y = shuffle(self.residualized_Y_)
 
                 shuffle_W = np.concatenate((shuffle_Y, self.residualized_Z_), axis=1)
                 shuffle_covfit_zy_ = shuffle_cov_est.fit(shuffle_W)
