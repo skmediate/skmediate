@@ -3,8 +3,7 @@ import numpy as np
 import warnings
 
 from collections.abc import Sequence
-from inspect import getmro
-from sklearn.base import clone, RegressorMixin
+from sklearn.base import clone
 from sklearn.linear_model import LinearRegression
 from sklearn.covariance import (
     EmpiricalCovariance,
@@ -28,6 +27,16 @@ COV_ESTIMATORS = {
     "oas": OAS(),
     "shrunk": ShrunkCovariance(),
 }
+
+
+def _quacks_like_estimator(instance):
+    """Return True if the instance quacks like an sklearn estimator."""
+    required_attrs = [
+        hasattr(instance, "fit"),
+        hasattr(instance, "predict"),
+        hasattr(instance, "get_params"),
+    ]
+    return all(required_attrs)
 
 
 class ConditionalCrossCovariance(object):
@@ -130,23 +139,22 @@ class ConditionalCrossCovariance(object):
             self.regression_estimator_xz = LinearRegression()
             self.regression_estimator_xy = LinearRegression()
         elif isinstance(regression_estimator, Sequence):
-            if not all(isinstance(r, RegressorMixin) for r in regression_estimator):
-                mro = [getmro(type(r)) for r in regression_estimator]
+            if not all(_quacks_like_estimator(r) for r in regression_estimator):
                 raise ValueError(
-                    f"regression_estimator must contain estimator instances that "
-                    f"inherit from sklearn.base.RegressorMixin. Got "
-                    f"{regression_estimator} instead. These instances have the "
-                    f"following method resolution order:\n{mro}"
+                    "regression_estimator must have a 'fit,' 'predict,' and "
+                    "'get_params' methods. The recommended way to do that is "
+                    "to wrap your regressor in a class that inherits from"
+                    "sklearn.base.RegressorMixin."
                 )
             self.regression_estimator_xz = regression_estimator[0]
             self.regression_estimator_xy = regression_estimator[1]
         else:
-            if not isinstance(regression_estimator, RegressorMixin):
+            if not _quacks_like_estimator(regression_estimator):
                 raise ValueError(
-                    f"regression_estimator must inherit from "
-                    f"sklearn.base.RegressorMixin. Got {regression_estimator} "
-                    f"instead, which has the following method resolution "
-                    f"order:\n{getmro(type(regression_estimator))}"
+                    "regression_estimator must have a 'fit,' 'predict,' and "
+                    "'get_params' methods. The recommended way to do that is "
+                    "to wrap your regressor in a class that inherits from"
+                    "sklearn.base.RegressorMixin."
                 )
             self.regression_estimator_xz = clone(regression_estimator)
             self.regression_estimator_xy = clone(regression_estimator)
